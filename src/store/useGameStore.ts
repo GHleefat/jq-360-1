@@ -1,7 +1,7 @@
-import { create } from 'zustand';
-import type { GameElement, Position, LightSegment } from '@/types/game';
-import { levels } from '@/utils/levels';
-import { calculateLightPath } from '@/utils/lightEngine';
+import { create } from "zustand";
+import type { GameElement, Position, LightSegment } from "@/types/game";
+import { levels } from "@/utils/levels";
+import { calculateLightPath } from "@/utils/lightEngine";
 
 interface GameStore {
   currentLevel: number;
@@ -27,21 +27,27 @@ interface GameStore {
 
 const loadProgress = () => {
   try {
-    const saved = localStorage.getItem('light-puzzle-progress');
+    const saved = localStorage.getItem("light-puzzle-progress");
     if (saved) {
       return JSON.parse(saved);
     }
   } catch (e) {
-    console.error('Failed to load progress', e);
+    console.error("Failed to load progress", e);
   }
   return { unlockedLevels: [1], bestSteps: {} };
 };
 
-const saveProgress = (unlockedLevels: number[], bestSteps: Record<number, number>) => {
+const saveProgress = (
+  unlockedLevels: number[],
+  bestSteps: Record<number, number>,
+) => {
   try {
-    localStorage.setItem('light-puzzle-progress', JSON.stringify({ unlockedLevels, bestSteps }));
+    localStorage.setItem(
+      "light-puzzle-progress",
+      JSON.stringify({ unlockedLevels, bestSteps }),
+    );
   } catch (e) {
-    console.error('Failed to save progress', e);
+    console.error("Failed to save progress", e);
   }
 };
 
@@ -64,35 +70,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!level) return;
 
     const elementsCopy = JSON.parse(JSON.stringify(level.elements));
-    const { path, targetHit } = calculateLightPath(elementsCopy, level.gridSize);
-
-    const { unlockedLevels, bestSteps } = get();
-    const newUnlockedLevels = [...unlockedLevels];
-    const newBestSteps = { ...bestSteps };
-    let isComplete = false;
-
-    if (targetHit) {
-      isComplete = true;
-      const currentBest = bestSteps[levelId];
-      if (currentBest === undefined || 0 < currentBest) {
-        newBestSteps[levelId] = 0;
-      }
-      const nextLevelId = levelId + 1;
-      if (!newUnlockedLevels.includes(nextLevelId) && levels.some((l) => l.id === nextLevelId)) {
-        newUnlockedLevels.push(nextLevelId);
-      }
-      saveProgress(newUnlockedLevels, newBestSteps);
-    }
+    const { path, targetHit } = calculateLightPath(
+      elementsCopy,
+      level.gridSize,
+    );
 
     set({
       currentLevel: levelId,
       elements: elementsCopy,
       steps: 0,
-      isComplete,
+      isComplete: false,
       lightPath: path,
       targetHit,
-      unlockedLevels: newUnlockedLevels,
-      bestSteps: newBestSteps,
     });
   },
 
@@ -105,7 +94,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       (el) =>
         el.id !== elementId &&
         el.position.x === newPosition.x &&
-        el.position.y === newPosition.y
+        el.position.y === newPosition.y,
     );
     if (occupied) return;
 
@@ -119,7 +108,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
 
     const newElements = elements.map((el) =>
-      el.id === elementId ? { ...el, position: { ...newPosition } } : el
+      el.id === elementId ? { ...el, position: { ...newPosition } } : el,
     );
 
     const { path, targetHit } = calculateLightPath(newElements, level.gridSize);
@@ -137,7 +126,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
         newBestSteps[currentLevel] = newSteps;
       }
       const nextLevelId = currentLevel + 1;
-      if (!newUnlockedLevels.includes(nextLevelId) && levels.some((l) => l.id === nextLevelId)) {
+      if (
+        !newUnlockedLevels.includes(nextLevelId) &&
+        levels.some((l) => l.id === nextLevelId)
+      ) {
         newUnlockedLevels.push(nextLevelId);
       }
       saveProgress(newUnlockedLevels, newBestSteps);
@@ -160,8 +152,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!level) return;
 
     const newElements: GameElement[] = elements.map((el) => {
-      if (el.id === elementId && el.type === 'mirror') {
-        const newOrientation: '/' | '\\' = el.orientation === '/' ? '\\' : '/';
+      if (el.id === elementId && el.type === "mirror") {
+        const newOrientation: "/" | "\\" = el.orientation === "/" ? "\\" : "/";
         return {
           ...el,
           orientation: newOrientation,
@@ -185,7 +177,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
         newBestSteps[currentLevel] = newSteps;
       }
       const nextLevelId = currentLevel + 1;
-      if (!newUnlockedLevels.includes(nextLevelId) && levels.some((l) => l.id === nextLevelId)) {
+      if (
+        !newUnlockedLevels.includes(nextLevelId) &&
+        levels.some((l) => l.id === nextLevelId)
+      ) {
         newUnlockedLevels.push(nextLevelId);
       }
       saveProgress(newUnlockedLevels, newBestSteps);
